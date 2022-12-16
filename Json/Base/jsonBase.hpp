@@ -34,6 +34,7 @@ typedef struct s_data {
                 cout << *static_cast<double*>(this->m_data) << endl;
                 break;
             case dataType::LIST:
+                cout << "List" << endl;
                 break;
             default:break;
         }
@@ -44,33 +45,70 @@ typedef map<string, jsonData> jsonNode;
 
 class JsonBase {
 public:
+    //JsonBase(const string json) {
     JsonBase(jsonNode json) {
         mc_base = json;
         mc_current = nullptr;
     };
-    JsonBase operator[] (string x) {
+
+private:
+    jsonNode mc_base;
+    jsonNode *mc_current;
+
+    jsonNode* getJson()
+    {
+        return ((this->mc_current && !this->mc_current->empty()) ? this->mc_current : &this->mc_base);
+    }
+
+public:
+    JsonBase operator[] (string key) {
         try {
-            jsonNode::iterator itSearch;
-            jsonNode::iterator itEnd;
-            if (mc_current != nullptr  && mc_current->empty()) {
-                itSearch = mc_current->find(x);
-                itEnd = mc_current->end();
+            jsonNode::iterator itSearch = this->getJson()->find(key);
+            if (itSearch != this->getJson()->end()) {
+                // TODO FIND A SOLUTION
+                //this->mc_current = &(this->getJson()->find(key));
             } else {
-                itSearch = mc_base.find(x);
-                itEnd = mc_base.end();
+                throw std::logic_error("Undefined key : " + key + "\n");
             }
-             
-            if (itSearch != itEnd) {
-                mc_current = &*itSearch;
-            } else {
-                throw std::logic_error( "Undefined key : "+x+"\n" );
-            }
-        } catch ( const std::exception & e )
-        {
+        } 
+        catch (const std::exception & e) {
             std::cerr << e.what();
         }
         return *this;
     };
+
+    friend ostream& operator<<(ostream& stream, JsonBase const & self) {
+        if (self.mc_current) {
+            if (self.mc_current->size() > 1) {
+                stream << JsonBase::printJson(self.mc_current);
+            } else {
+                auto it = self.mc_current->begin();
+                switch (it->second.m_type) {
+                    case dataType::STRING:
+                    case dataType::CHAR:
+                        stream << *static_cast<string*>(it->second.m_data);
+                        break;
+                    case dataType::INT:
+                        stream << *static_cast<int*>(it->second.m_data);
+                        break;
+                    case dataType::DOUBLE:
+                        stream << *static_cast<double*>(it->second.m_data);
+                        break;
+                    case dataType::LIST:
+                        break;
+                    default:break;
+                }
+            }
+        } else {
+            stream << JsonBase::printJson(&self.mc_base);
+        }
+        return stream;
+    }
+
+    static string printJson(const jsonNode* pc_json = nullptr, string pz_tabulation = "\t");
+    void print() {
+        cout << printJson(this->getJson()) << endl;
+    }
 
     // #TODO a template val() to return any types in TYPES enum
     string val() {
@@ -113,47 +151,7 @@ public:
             it->second.m_data = static_cast<void*>(&newValue);
         }
         mc_current->clear();
-    }
-
-
-    friend ostream& operator<<(ostream& stream, JsonBase const & self) {
-        if (self.mc_current != nullptr) {
-            if (self.mc_current->size() > 1) {
-                stream << JsonBase::printJson(self.mc_current);
-            } else {
-                jsonNode::const_iterator it = self.mc_current->begin();
-                switch (it->second.m_type) {
-                    case dataType::STRING:
-                    case dataType::CHAR:
-                        stream << *static_cast<string*>(it->second.m_data);
-                        break;
-                    case dataType::INT:
-                        stream << *static_cast<int*>(it->second.m_data);
-                        break;
-                    case dataType::DOUBLE:
-                        stream << *static_cast<double*>(it->second.m_data);
-                        break;
-                    case dataType::LIST:
-                        break;
-                    default:break;
-                }
-            }
-            //cout << "<< mc_current->clear()" << endl;
-            self.mc_current->clear();
-        }
-        return stream;
-    }
-
-    jsonNode mc_base;
-    jsonNode *mc_current;
-
-    static string printJson(const jsonNode* pc_json = nullptr, string pz_tabulation = "\t");
-    void print() {
-        if (mc_current != nullptr && !mc_current->empty())
-            cout << printJson(mc_current) << endl;
-        else
-            cout << printJson(&mc_base) << endl;
-    }
+    }    
 };
 
 string JsonBase::printJson(const jsonNode* pc_json, string pz_tabulation) {

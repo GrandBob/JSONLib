@@ -77,11 +77,8 @@ int main()
     yolo["yolo"] = data_double;
 
     JsonBase json(yolo);
-
-
-    JsonBase::printJson(&json.mc_base);
-
     json.print();
+
     cout << endl << endl;
     cout << "json[1] : " << json["1"] << endl;
     //cout << "json[yolo] : " << json["yolo"] << endl;
@@ -96,18 +93,24 @@ int main()
 //    cout << "json[1][trump] : " << json["1"]["trump"] << endl;
 
     string test = R"({
-        toto : "titi",
-        tutu : "toto",
-        dude : {
-            name : "jack",
-            age : 12
-            city : {
-                name : "Plaisir de toto",
-                postale : 78370,
-                altitude : 21.2422124,
-                longitude : 5.123532
+        "dude" : {
+            "firstname" : "Pierre",
+            "lastname" : "Paul-Jack",
+            "age" : 12,
+            "city" : {
+                "name" : "Plaisir",
+                "postale" : 78370,
+                "altitude" : 21.2422124,
+                "longitude" : 5.123532
             }
-        }
+        },
+        "family" : [
+            "Pascaline",
+            "Gerald",
+            "Bertrand",
+            "Celestine",
+            "Rorberto"
+        ]
     })";
 
     //int nani = json["1"]["2"]["age"];
